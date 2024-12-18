@@ -1,28 +1,36 @@
-<tr
-  id="config_table_row_{{ item.id }}"
-  hx-target="closest tr"
-  hx-headers='{ "X-CSRFToken": "{{ csrf_token }}" }'
+{% load i18n %}
+
+<!-- Config Table Row Form {{ form.id }} -->
+<form
+  id="config_table_row_{{ form.id }}"
+  hx-target="#config_table_row_{{ form.id }}"
+  class="contents"
 >
-  <td>
+  {% csrf_token %}
+  <c-table-cell class="gap-1 !items-baseline sm:flex-row flex-col">
+    <span class="inline sm:hidden text-xs font-bold text-neutral-500">{% trans "Name" %}</span>
     <input 
-      class="input input-sm input-bordered"
+      class="input input-sm input-bordered w-full max-w-full"
       type="text" 
       name="{{ form.name.html_name }}" 
       value="{{ form.name.value }}"
       data-id="{{ form.id }}"
     >
-  </td>
-  <td>
+  </c-table-cell>
+
+  <c-table-cell class="gap-1 !items-baseline sm:flex-row flex-col">
+    <span class="inline sm:hidden text-xs font-bold text-neutral-500">{% trans "Name" %}</span>
     <input 
       autofocus
-      class="input input-sm input-bordered"
+      class="input input-sm input-bordered w-full max-w-full"
       type="text" 
       name="{{ form.value.html_name }}" 
       value="{{ form.value.value }}"
       data-id="{{ form.id }}"
     >
-  </td>
-  <td>
+  </c-table-cell>
+
+  <c-table-cell class="gap-1 justify-start sm:justify-end">
     <button 
       type="button"
       hx-post="{% querystring item=form.id action='save' %}"
@@ -35,8 +43,7 @@
 
     <button 
       type="button"
-      hx-post="{% querystring item=form.id action='delete' %}"
-      hx-swap="delete"
+      hx-post="{% querystring item=form.id action='delete' %}" hx-swap="delete"
       class="btn btn-square btn-xs btn-warning"
     >
       {% lucide "trash-2" class="size-4" %}
@@ -49,5 +56,5 @@
     >
       {% lucide "x" class="size-4" %}
     </button>
-  </td>
-</tr>
+  </c-table-cell>
+</form>

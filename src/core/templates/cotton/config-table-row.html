@@ -1,21 +1,28 @@
-<tr id="config_table_row_{{ item.id }}">
-  <td>
+{% load i18n %}
+
+<!-- Config Table Row {{ item.id }} -->
+<div id="config_table_row_{{ item.id }}" class="contents text-sm">
+  <c-table-cell class="gap-1 max-sm:!items-baseline sm:flex-row flex-col">
+    <span class="inline sm:hidden text-xs font-bold text-neutral-500">{% trans "Name" %}</span>
     {{ item.name }}
-  </td>
-  <td>
-  {{ item.value }}
-  </td>
-  <td>
+  </c-table-cell>
+
+  <c-table-cell class="gap-1 max-sm:!items-baseline sm:flex-row flex-col">
+    <span class="inline sm:hidden text-xs font-bold text-neutral-500">{% trans "Value" %}</span>
+    {{ item.value }}
+  </c-table-cell>
+
+  <c-table-cell class="sm:justify-end justify-start">
     <button 
       type="button"
       name="action"
       value="edit"
       hx-get="{% querystring item=item.id %}"
-      hx-target="closest tr"
+      hx-target="#config_table_row_{{ item.id }}"
       hx-swap="outerHTML"
       class="btn btn-square btn-xs"
     >
       {% lucide "pencil" class="size-4" %}
     </button>
-  </td>
-</tr>
+  </c-table-cell>
+</div>

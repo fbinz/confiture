@@ -1,21 +1,22 @@
-<table class="table">
-  <thead>
-    <tr>
-      {% for header in config_table.headers %}
-      <td>
-        {{ header }}
-      </td>
-      {% endfor %}
-      <td></td>
-    <tr>
-  </thead>
-  <tbody>
-    {% for item in config_table.rows %}
-      <c-config-table-row :item="item" />
+<div class="grid sm:grid-cols-[1fr_1fr_6rem] grid-cols-1">
+  <!-- Header -->
+  <div class="text-sm font-bold text-neutral-500 hidden sm:contents">
+    {% for header in config_table.headers %}
+    <div class="p-2">
+      {{ header }}
+    </div>
     {% endfor %}
+    <div class="p-2"></div>
+  </div>
 
-    {% partialdef config_table_row_form %}
-      <c-config-table-row-form :form="config_table_row_form" />
-    {% endpartialdef %}
-  </tbody>
-</table>
+  <!-- Separator -->
+  <div class="col-span-full h-[2px] bg-base-200"></div>
+
+  <!-- Body -->
+  {% for item in config_table.rows %}
+    <c-config-table-row :item="item" />
+
+    <!-- Separator -->
+    <div class="col-span-full h-px bg-base-200"></div>
+  {% endfor %}
+</div>
