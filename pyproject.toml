@@ -1,0 +1,20 @@
+[project]
+name = "confiture"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.1.4",
+    "pytest-django>=4.9.0",
+    "pytest>=8.3.4",
+    "django-extensions>=3.2.3",
+    "django-cotton>=1.5.1",
+    "django-magic-context",
+    "attrs>=24.3.0",
+    "django-template-partials>=24.4",
+    "django-lucide-icons>=0.2.2",
+]
+
+[tool.uv.sources]
+django-magic-context = { git = "https://github.com/fbinz/django-magic-context" }

@@ -1,0 +1,27 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html data-theme="wireframe">
+  <head>
+    <meta charset="utf-8">
+    <title>Confiture</title>
+    <meta name="author" content="Fabian Binz">
+    <meta name="description" content="Configure with a T">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
+  </head>
+  <body class="bg-base-100" hx-swap="outerHTML">
+    <c-config-table />
+
+    {% partialdef config_table_row_form %}
+      <c-config-table-row-form :form="config_table_row_form" />
+    {% endpartialdef %}
+
+    {% partialdef config_table_row_view %}
+      <c-config-table-row :item="config_table_row_item" />
+    {% endpartialdef %}
+  </body>
+</html>

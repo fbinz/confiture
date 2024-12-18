@@ -1,0 +1,21 @@
+<table class="table">
+  <thead>
+    <tr>
+      {% for header in config_table.headers %}
+      <td>
+        {{ header }}
+      </td>
+      {% endfor %}
+      <td></td>
+    <tr>
+  </thead>
+  <tbody>
+    {% for item in config_table.rows %}
+      <c-config-table-row :item="item" />
+    {% endfor %}
+
+    {% partialdef config_table_row_form %}
+      <c-config-table-row-form :form="config_table_row_form" />
+    {% endpartialdef %}
+  </tbody>
+</table>

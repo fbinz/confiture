@@ -1,0 +1,21 @@
+<tr id="config_table_row_{{ item.id }}">
+  <td>
+    {{ item.name }}
+  </td>
+  <td>
+  {{ item.value }}
+  </td>
+  <td>
+    <button 
+      type="button"
+      name="action"
+      value="edit"
+      hx-get="{% querystring item=item.id %}"
+      hx-target="closest tr"
+      hx-swap="outerHTML"
+      class="btn btn-square btn-xs"
+    >
+      {% lucide "pencil" class="size-4" %}
+    </button>
+  </td>
+</tr>
