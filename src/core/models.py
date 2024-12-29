@@ -1,9 +1,10 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 
-class Profile(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+class AdapterConfig(models.Model):
+    cls = models.CharField(max_length=255, help_text="Dotted path of adapter class")
+    config = models.JSONField()
 
 
 class Organization(models.Model):
@@ -11,6 +12,11 @@ class Organization(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Profile(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
 
 
 class Project(models.Model):
@@ -49,12 +55,28 @@ class ConfigItemType(models.IntegerChoices):
 class ConfigItem(models.Model):
     Type = ConfigItemType
 
-    environment = models.ForeignKey(Environment, on_delete=models.CASCADE)
-
+    service = models.ForeignKey(Service, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    value = models.TextField()
     type = models.PositiveSmallIntegerField(choices=ConfigItemType)
     is_secret = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
+
+
+class ConfigItemValue(models.Model):
+    item = models.ForeignKey(ConfigItem, on_delete=models.CASCADE)
+    environment = models.ForeignKey(Environment, on_delete=models.CASCADE)
+
+    value = models.TextField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["item", "environment"],
+                name="unique_item_per_environment",
+            ),
+        ]
+
+    def __str__(self):
+        return self.value

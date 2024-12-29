@@ -1,0 +1,27 @@
+{% load lucide_tags %}
+
+<c-layouts.base>
+  <div class="navbar bg-base-100">
+    <div class="flex-1">
+      <a class="btn btn-ghost text-xl">Confiture</a>
+    </div>
+
+    <div class="flex-none">
+      <form method="post" action="{% url 'account_logout' %}" >
+        {% csrf_token %}
+        <button class="btn btn-primary">
+          Logout
+          <c-lucide icon="log-out" />
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <main class="p-2">
+    {% if not request.user.is_anonymous %}
+      {{ slot }}
+    {% else %}
+    You need to <a href="{% url 'account_login' %}">log in</a> to see this page. 
+    {% endif %}
+  </main>
+</c-layouts.base>

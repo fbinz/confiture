@@ -1,0 +1,46 @@
+{% load i18n %}
+<c-layouts.private>
+
+  <c-nav-breadcrumbs :breadcrumbs="nav_breadcrumbs" />
+
+  <c-config.table :table="config_table" id="config_table"/>
+
+  <button
+    class="btn btn-ghost"
+    hx-get="{% url 'core:service-item-new' org_id project_id service_id %}"
+    hx-target="#config_table"
+    hx-swap="beforeend"
+  >
+    {% trans 'Add config item' %}
+  </button>
+
+  {% comment %}
+  {% for env in environments %}
+  <c-card
+    href="{% url 'core:environment-detail' org.id project.id service.id env.id %}"
+    title="{{ env.name }}">
+  </c-card>
+  {% endfor %}
+  {% endcomment %}
+
+  {% partialdef item %}
+    <c-config.item :item="item_form.instance" />
+  {% endpartialdef %}
+
+  {% partialdef item-form %}
+    <c-config.item-form :form="item_form" />
+  {% endpartialdef %}
+
+  {% partialdef item-value %}
+    <c-config.item-value :item_id="item_id" :value="item_value_form.instance" :env_id="env_id" />
+  {% endpartialdef %}
+
+  {% partialdef item-value-form %}
+    <c-config.item-value-form :form="item_value_form" />
+  {% endpartialdef %}
+
+  {% partialdef row %}
+    <c-config.row :row="item_row" :environments="environments" />
+  {% endpartialdef %}
+
+</c-layouts.private>

@@ -1,0 +1,12 @@
+<c-layouts.private>
+  <c-nav-breadcrumbs :org="organization" />
+
+  Your projects:
+  <ol class="flex flex-col gap-2">
+    {% for project in projects %}
+      <li>
+        <c-project-card :project="project" />
+      </li>
+    {% endfor %}
+  </ol>
+</c-layouts.private>

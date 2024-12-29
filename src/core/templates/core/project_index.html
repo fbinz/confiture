@@ -1,0 +1,11 @@
+<c-layouts.private>
+  <c-nav-breadcrumbs :org="organization" :project="project" />
+
+  {% for service in services %}
+  <c-card
+    href="{% url 'core:service-detail' org_id project_id service.id %}"
+    title="{{ service.name }}">
+      Adapter: CapRover
+  </c-card>
+  {% endfor %}
+</c-layouts.private>

@@ -1,0 +1,33 @@
+{% load i18n %}
+<c-layouts.private>
+
+  <c-nav-breadcrumbs :org="organization" :project="project" :service="service" :env="environment" />
+
+  <div 
+    class="w-full flex gap-2 justify-end"
+    hx-on:htmx:after-request="navigator.clipboard.writeText(event.detail.xhr.responseText)"
+    hx-swap="none"
+  >
+    <a
+      hx-get="{% querystring action='clipboard-env' %}"
+      class="btn btn-secondary btn-xs btn-outline"
+    >
+      {% trans "Copy .env" %}
+    </a>
+    <a
+      hx-get="{% querystring action='clipboard-envrc' %}"
+      class="btn btn-secondary btn-xs btn-outline"
+    >
+      {% trans "Copy .envrc" %}
+    </a>
+  </div>
+  <c-config.table :table="config_table" />
+
+  {% partialdef config_table_row_form %}
+    <c-config.row-form :form="config_table_row_form" />
+  {% endpartialdef %}
+
+  {% partialdef config_table_row_view %}
+    <c-config.row :item="config_table_row_item" />
+  {% endpartialdef %}
+</c-layouts.private>

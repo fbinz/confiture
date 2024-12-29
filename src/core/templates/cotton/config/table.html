@@ -1,0 +1,27 @@
+{% load core_extras %}
+
+{% with num_headers=table.headers|length %}
+<div 
+  class="grid"
+  style="grid-template-columns: repeat({{ num_headers }}, 1fr)"
+  id="{{ id }}"
+>
+  <!-- Header -->
+  <div class="text-sm font-bold text-neutral-500 hidden sm:contents">
+    {% for header in table.headers %}
+      <div class="p-2">
+        {{ header }}
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Separator -->
+  <div class="col-span-full h-[2px] bg-base-200"></div>
+
+  <!-- Body -->
+  {% for row in table.rows %}
+    <c-config.row :row="row" :environments="environments" />
+  {% endfor %}
+
+</div>
+{% endwith %}

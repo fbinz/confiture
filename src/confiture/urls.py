@@ -1,10 +1,8 @@
-from types import SimpleNamespace
 from django.contrib import admin
-from django.urls import path, include
-
-from core import views as core_views
+from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", core_views.index, name="index"),
+    path("accounts/", include("allauth.urls")),
+    path("", include("core.urls", namespace="core")),
 ]

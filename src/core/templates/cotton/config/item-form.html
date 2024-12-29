@@ -1,0 +1,51 @@
+{% load i18n %}
+
+<form 
+  id="item_form_{{ form.instance.id }}"
+  {% if form.instance.id %}
+  hx-post="{% url "core:service-item-edit" org_id project_id service_id form.instance.id %}"
+  {% else %}
+  hx-post="{% url "core:service-item-list" org_id project_id service_id %}"
+  {% endif %}
+  hx-target="#item_form_{{ form.instance.id }}"
+  class="contents"
+>
+  {% csrf_token %}
+  <c-table-cell class="gap-1 max-sm:!items-baseline w-full sm:justify-between sm:flex-row flex-col">
+    <input 
+      class="input input-sm input-bordered w-full max-w-full"
+      type="text" 
+      placeholder="{% trans 'Name' %}"
+      name="{{ form.name.html_name }}" 
+      value="{{ form.name.value|default_if_none:'' }}"
+      required
+      autofocus
+    >
+
+    <button 
+      type="submit"
+      class="btn btn-square btn-xs btn-success"
+    >
+      <c-lucide icon="check" />
+    </button>
+
+    {% if form.instance.id is not None %}
+      <button 
+        hx-delete="{% url "core:service-item-edit" org_id project_id service_id form.instance.id %}"
+        class="btn btn-square btn-xs btn-warning"
+        hx-target="#row-{{ form.instance.name }}"
+        hx-swap="delete"
+      >
+        <c-lucide icon="trash-2" />
+      </button>
+
+      <button 
+        hx-get="{% url 'core:service-item-view' org_id project_id service_id form.instance.id %}"
+        hx-swap="outerHTML"
+        class="btn btn-square btn-xs btn-ghost"
+      >
+        <c-lucide icon="x" />
+      </button>
+    {% endif %}
+  </c-table-cell>
+</form>

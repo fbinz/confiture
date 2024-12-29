@@ -22,6 +22,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_extensions",
     "django_lucide_icons",
+    "django_harlequin",
+    "allauth",
+    "allauth.account",
     "template_partials.apps.SimpleAppConfig",
     "django_cotton.apps.SimpleAppConfig",
     "core",
@@ -35,6 +38,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "confiture.urls"
@@ -106,6 +110,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+LOGIN_REDIRECT_URL = "/"
+ACCOUNT_ADAPTER = "confiture.auth_adapter.AccountAdapter"
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/

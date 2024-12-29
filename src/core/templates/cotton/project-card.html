@@ -1,0 +1,14 @@
+{% load i18n %}
+
+<c-card 
+  href="{% url 'core:project-detail' project.organization_id project.id %}"
+  title="{{ project.name }}"
+>
+  <p>
+    {% blocktrans count count=project.num_services|default:0 %}
+      {{ count }} service
+    {% plural %}
+      {{ count }} services
+    {% endblocktrans %}
+  </p>
+</c-card>

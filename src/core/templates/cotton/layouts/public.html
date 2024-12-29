@@ -1,0 +1,28 @@
+{% load lucide_tags %}
+
+<c-layouts.base>
+  <div class="navbar bg-base-100">
+    <div class="flex-1">
+      <a class="btn btn-ghost text-xl">Confiture</a>
+    </div>
+
+    <div class="flex-none">
+      {% if request.user.is_anonymous %}
+        <a href="{% url 'account_login' %}" class="btn btn-primary">
+          Login
+          <c-lucide icon="log-in" />
+        </a>
+      {% else %}
+        <form method="post" action="{% url 'account_logout' %}" >
+          {% csrf_token %}
+          <button class="btn btn-primary">
+            Logout
+            <c-lucide icon="log-out" />
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {{ slot }}
+</c-layouts.base>

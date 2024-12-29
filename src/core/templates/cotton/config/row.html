@@ -1,0 +1,10 @@
+{% load i18n core_extras %}
+
+<div class="contents" id="row-{{ row.item.name }}">
+  <c-config.item :item="row.item" />
+  {% for env in environments %}
+    {% with value=row.values|get_for_env:env %}
+      <c-config.item-value :item_id="row.item.id" :value="value" :env_id="env.id" />
+    {% endwith %}
+  {% endfor %}
+</div>

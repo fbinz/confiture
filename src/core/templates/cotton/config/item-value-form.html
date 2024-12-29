@@ -1,0 +1,46 @@
+{% load i18n %}
+
+<form 
+  id="value_{{ form.item_id }}_{{ form.env_id }}"
+  hx-post="{% url "core:service-value-edit" org_id project_id service_id form.item_id form.env_id %}"
+  hx-target="#value_{{ form.item_id }}_{{ form.env_id }}"
+  class="contents"
+>
+  {% csrf_token %}
+  <c-table-cell class="gap-1 max-sm:!items-baseline w-full sm:justify-between sm:flex-row flex-col">
+    <input 
+      class="input input-sm input-bordered w-full max-w-full"
+      type="text" 
+      placeholder="{% trans 'Value' %}"
+      name="{{ form.value.html_name }}" 
+      value="{{ form.value.value|default_if_none:'' }}"
+      required
+      autofocus
+    >
+
+    <button 
+      type="submit"
+      class="btn btn-square btn-xs btn-success"
+    >
+      <c-lucide icon="check" />
+    </button>
+
+    {% if form.instance.id is not None %}
+      <button 
+        hx-delete="{% url "core:service-value-edit" org_id project_id service_id form.item_id form.env_id %}"
+        class="btn btn-square btn-xs btn-warning"
+        hx-swap="outerHTML"
+      >
+        <c-lucide icon="trash-2" />
+      </button>
+
+      <button 
+        hx-get="{% url "core:service-value-view" org_id project_id service_id form.item_id form.env_id %}"
+        hx-swap="outerHTML"
+        class="btn btn-square btn-xs btn-ghost"
+      >
+        <c-lucide icon="x" />
+      </button>
+    {% endif %}
+  </c-table-cell>
+</form>

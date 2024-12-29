@@ -1,0 +1,23 @@
+{% load core_extras lucide_tags %}
+
+<c-vars last />
+
+{% if url %}
+<a href="{{ url }}">
+  {{ slot }}
+</a>
+{% elif targets %}
+  <div class="dropdown dropdown-xs">
+    <div tabindex="0" role="button" class="btn btn-xs btn-ghost">
+      {{ targets.0|nav_label }}
+      {% if targets|length > 1 %}
+        <c-lucide icon="chevrons-up-down" />
+      {% endif %}
+    </div>
+    <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+      {% for target in targets %}
+        <li><a href="{{ target|nav_url }}">{{ target|nav_label }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}

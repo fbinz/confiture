@@ -1,0 +1,18 @@
+{% load i18n %}
+
+<c-table-cell
+  class="gap-1 max-sm:!items-baseline sm:flex-row sm:justify-between flex-col"
+  id="item-value-{{ item_id }}-{{ env_id }}"
+>
+  <div>{{ value.value|default:'-' }}</div>
+
+  <button 
+    type="button"
+    hx-get="{% url "core:service-value-edit" org_id project_id service_id item_id env_id %}"
+    hx-target="#item-value-{{ item_id }}-{{ env_id }}"
+    hx-swap="outerHTML"
+    class="btn btn-square btn-xs"
+  >
+    <c-lucide icon="pencil" />
+  </button>
+</c-table-cell>

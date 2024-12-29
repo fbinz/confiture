@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Profile, Organization, Project, Service, Environment, ConfigItem
+from .models import ConfigItem, Environment, Organization, Profile, Project, Service
 
 
 @admin.register(Profile)

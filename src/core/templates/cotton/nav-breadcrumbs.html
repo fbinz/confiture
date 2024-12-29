@@ -1,0 +1,11 @@
+<c-breadcrumb.s>
+  {% for targets in breadcrumbs %}
+    <c-breadcrumb.item
+      :targets="targets"
+    />
+
+    {% if not forloop.last %}
+      <span class="text-3xl font-light text-gray-200">/</span>
+    {% endif %}
+  {% endfor %}
+</c-breadcrumb.s>
