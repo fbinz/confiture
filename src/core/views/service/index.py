@@ -1,6 +1,9 @@
-import re
-from django.http import HttpResponse, HttpResponseBadRequest
-from django.template import Context, RequestContext, Template
+from collections import defaultdict
+from typing import Any, Callable
+from attrs import define, field
+from django.http import HttpResponse
+from django.template import RequestContext, Template
+from django.urls import path
 import django_magic_context as magic
 from django import forms
 from django.shortcuts import get_object_or_404
@@ -12,15 +15,69 @@ from core.models import ConfigItem, ConfigItemValue, Environment, Service
 from core.types import ConfigTable, ConfigTableRow
 
 
-def cget(context, key):
-    value = context[key]
-    if callable(value):
-        return value()
-    return value
+@define
+class Dispatcher:
+    context_factory: Callable[..., dict[str, Any]]
+
+    registry: Any = field(factory=lambda: defaultdict(list))
+    paths: list[Any] = field(factory=list)
+
+    @property
+    def urls(self):
+        return self.paths
+
+    def guard(self, *paths, **kwargs):
+        def decorator(decoratee):
+            for p in paths:
+                self.registry[p.name].append((kwargs, decoratee))
+                self.paths.append(p)
+
+            return decoratee
+
+        return decorator
+
+    def path(self, *args, **kwargs):
+        return path(*args, view=self.view, **kwargs)
+
+    def view(self, request, **kwargs):
+        context = self.context_factory(request, **kwargs)
+
+        for expectations, handler in self.registry[request.resolver_match.url_name]:
+            for key, expected_value in expectations.items():
+                try:
+                    value = cget(context, key)
+                except KeyError:
+                    break
+
+                if callable(expected_value):
+                    if not expected_value(value):
+                        break
+                else:
+                    if value != expected_value:
+                        break
+            else:
+                return handler(context)
 
 
-def get_action(request) -> str:
-    return request.GET.get("action")
+NO_DEFAULT = object()
+
+
+def cget(context, *keys, default=NO_DEFAULT):
+    result = []
+    for key in keys:
+        if default is NO_DEFAULT:
+            value = context[key]
+        else:
+            value = context.get(key, default)
+        if callable(value):
+            result.append(value())
+        else:
+            result.append(value)
+
+    if len(result) == 1:
+        return result[0]
+
+    return result
 
 
 def get_item(item_id):
@@ -102,7 +159,7 @@ def get_config_table(org, project, service, environments) -> ConfigTable:
     )
 
 
-def make_context(request, org_id, project_id, service_id):
+def make_context(request, org_id, project_id, service_id, **kwargs):
     service = get_object_or_404(
         Service.objects.select_related(
             "project",
@@ -115,7 +172,7 @@ def make_context(request, org_id, project_id, service_id):
 
     return magic.resolve(
         request=request,
-        action=get_action,
+        method=request.method,
         user=request.user,
         org_id=org_id,
         project_id=project_id,
@@ -126,6 +183,7 @@ def make_context(request, org_id, project_id, service_id):
         environments=get_environments,
         config_table=get_config_table,
         breadcrumbs=get_breadcrumbs,
+        **kwargs,
     )
 
 
@@ -134,10 +192,11 @@ def render_component(context, name, **kwargs):
 
     attrs = " ".join(f':{key}="{key}"' for key in kwargs.keys())
 
-    ctx = RequestContext(request, kwargs)
-    ctx.update(context)
+    request_context = RequestContext(request, kwargs)
+    request_context.update(context)
 
-    rendered = Template(f"{{% c {name} {attrs} %}}{{% endc %}}").render(ctx)
+    template = Template(f"{{% c {name} {attrs} %}}{{% endc %}}")
+    rendered = template.render(request_context)
     return HttpResponse(rendered)
 
 
@@ -156,110 +215,131 @@ def render_item_row(context, item) -> HttpResponse:
     return render_component(context, "config.row", row=row, environments=environments)
 
 
-def handle_item(context, item_id, action):
+def render_item(context, item) -> HttpResponse:
+    return render_component(context, "config.item", item=item)
+
+
+def render_item_form(context, form) -> HttpResponse:
+    return render_component(context, "config.item-form", form=form)
+
+
+view = Dispatcher(make_context)
+
+
+@view.guard(
+    view.path("items/<int:item_id>/", name="service-item"),
+    method="GET",
+)
+def handle_item_get(context):
+    item_id = cget(context, "item_id")
+    item = get_item(item_id)
+    return render_item(context, item)
+
+
+@view.guard(
+    view.path("items/", name="service-item-list"),
+    view.path("items/<int:item_id>/", name="service-item"),
+    method="POST",
+)
+def handle_item_post(context):
     request = cget(context, "request")
+    item_id = cget(context, "item_id", default=None)
+    form = get_item_form(request, item_id)
+    is_new = not form.instance.id
+    if not form.is_valid():
+        return render_item_form(context, form)
 
-    match (request.method, action):
-        case ("GET", "view"):
-            item = get_item(item_id)
-            return render_component(context, "config.item", item=item)
+    item = form.save(commit=False)
+    item.type = ConfigItem.Type.ENV
+    item.service = cget(context, "service")
+    item.save()
 
-        case ("GET", action) if action in ("new", "edit"):
-            form = get_item_form(request, item_id)
-            return render_component(context, "config.item-form", form=form)
+    if is_new:
+        return render_item_row(context, form.instance)
 
-        case ("POST", action) if action in ("new", "edit"):
-            form = get_item_form(request, item_id)
-            is_new = not form.instance.id
-            if not form.is_valid():
-                return render_component(context, "config.item-form", form=form)
-
-            item = form.save(commit=False)
-            item.type = ConfigItem.Type.ENV
-            item.service = cget(context, "service")
-            item.save()
-
-            if is_new:
-                return render_item_row(context, form.instance)
-
-            return render_component(context, "config.item", item=item)
-
-        case ("DELETE", "edit"):
-            ConfigItem.objects.filter(id=item_id).delete()
-            return HttpResponse()
-
-    return HttpResponseBadRequest()
+    return render_item(context, item)
 
 
-def handle_item_value(context, item_id, env_id, action):
+@view.guard(
+    view.path("items/<int:item_id>/", name="service-item"),
+    method="DELETE",
+)
+def handle_item_delete(context):
+    item_id = cget(context, "item_id")
+    ConfigItem.objects.filter(id=item_id).delete()
+    return HttpResponse()
+
+
+@view.guard(
+    view.path("items/new/", name="service-item-new"),
+    view.path("items/<int:item_id>/edit/", name="service-item-form"),
+    method="GET",
+)
+def handle_item_edit(context):
     request = cget(context, "request")
-
-    match (request.method, action):
-        case ("GET", "view"):
-            value = get_item_value(item_id, env_id)
-            return render_component(
-                context,
-                "config.item-value",
-                item_id=item_id,
-                env_id=env_id,
-                value=value,
-            )
-
-        case ("GET", "edit"):
-            form = get_item_value_form(request, item_id, env_id)
-            return render_component(context, "config.item-value-form", form=form)
-
-        case ("POST", "edit"):
-            form = get_item_value_form(request, item_id, env_id)
-            if not form.is_valid():
-                return render_component(context, "config.item-value-form", form=form)
-
-            value = form.save(commit=False)
-            value.item_id = item_id
-            value.environment_id = env_id
-            value.save()
-
-            return render_component(
-                context,
-                "config.item-value",
-                item_id=item_id,
-                env_id=env_id,
-                value=value,
-            )
-
-        case ("DELETE", "edit"):
-            ConfigItemValue.objects.filter(
-                item_id=item_id, environment_id=env_id
-            ).delete()
-            return render_component(
-                context,
-                "config.item-value",
-                item_id=item_id,
-                env_id=env_id,
-                value=None,
-            )
-
-    return HttpResponseBadRequest()
+    item_id = cget(context, "item_id", default=None)
+    form = get_item_form(request, item_id)
+    return render_item_form(context, form)
 
 
-def view(
-    request,
-    org_id,
-    project_id,
-    service_id,
-    item_id=None,
-    action=None,
-    resource=None,
-    env_id=None,
-):
-    context = make_context(request, org_id, project_id, service_id)
+@view.guard(
+    view.path("items/<int:item_id>/env/<int:env_id>/", name="service-value"),
+    method="GET",
+)
+def handle_value_get(context):
+    item_id, env_id = cget(context, "item_id", "env_id")
+    value = get_item_value(item_id, env_id)
+    return render_component(
+        context, "config.item-value", item_id=item_id, env_id=env_id, value=value
+    )
 
-    if resource == "items":
-        if response := handle_item(context, item_id, action):
-            return response
 
-    elif resource == "values":
-        if response := handle_item_value(context, item_id, env_id, action):
-            return response
+@view.guard(
+    view.path("items/<int:item_id>/env/<int:env_id>/", name="service-value"),
+    method="POST",
+)
+def handle_value_post(context):
+    request, item_id, env_id = cget(context, "request", "item_id", "env_id")
+    form = get_item_value_form(request, item_id, env_id)
+    if not form.is_valid():
+        return render_component(context, "config.item-value-form", form=form)
 
-    return TemplateResponse(request, f"core/service_index.html", context)
+    value = form.save(commit=False)
+    value.item_id = item_id
+    value.environment_id = env_id
+    value.save()
+
+    return render_component(
+        context, "config.item-value", item_id=item_id, env_id=env_id, value=value
+    )
+
+
+@view.guard(
+    view.path("items/<int:item_id>/env/<int:env_id>/", name="service-value"),
+    method="DELETE",
+)
+def handle_value_delete(context):
+    item_id, env_id = cget(context, "item_id", "env_id")
+    ConfigItemValue.objects.filter(item_id=item_id, environment_id=env_id).delete()
+    return render_component(
+        context, "config.item-value", item_id=item_id, env_id=env_id, value=None
+    )
+
+
+@view.guard(
+    view.path("items/<int:item_id>/env/<int:env_id>/edit/", name="service-value-form"),
+    method="GET",
+)
+def handle_value_edit(context):
+    request, item_id, env_id = cget(context, "request", "item_id", "env_id")
+    form = get_item_value_form(request, item_id, env_id)
+    return render_component(context, "config.item-value-form", form=form)
+
+
+@view.guard(
+    view.path("", name="service-detail"),
+    method="GET",
+)
+def handle_get(context):
+    request = cget(context, "request")
+    return TemplateResponse(request, "core/service_index.html", context)

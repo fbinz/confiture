@@ -5,7 +5,7 @@ from core.views import index
 from core.views.environment import index as environment_index
 from core.views.org import index as org_index
 from core.views.project import index as project_index
-from core.views.service import index as service_index
+from core.views.service.index import view as service_index
 
 
 class SqidConverter:
@@ -67,47 +67,7 @@ urlpatterns = [
     ),
     path(
         "o/<org-id:org_id>/p/<project-id:project_id>/s/<service-id:service_id>/",
-        include(
-            [
-                path("", service_index.view, name="service-detail"),
-                path(
-                    "items/",
-                    service_index.view,
-                    name="service-item-list",
-                    kwargs=dict(resource="items", action="new"),
-                ),
-                path(
-                    "items/new",
-                    service_index.view,
-                    name="service-item-new",
-                    kwargs=dict(resource="items", action="new"),
-                ),
-                path(
-                    "items/<int:item_id>/view/",
-                    service_index.view,
-                    name="service-item-view",
-                    kwargs=dict(resource="items", action="view"),
-                ),
-                path(
-                    "items/<int:item_id>/edit/",
-                    service_index.view,
-                    name="service-item-edit",
-                    kwargs=dict(resource="items", action="edit"),
-                ),
-                path(
-                    "items/<int:item_id>/env/<int:env_id>/edit/",
-                    service_index.view,
-                    name="service-value-edit",
-                    kwargs=dict(resource="values", action="edit"),
-                ),
-                path(
-                    "items/<int:item_id>/env/<int:env_id>/view/",
-                    service_index.view,
-                    name="service-value-view",
-                    kwargs=dict(resource="values", action="view"),
-                ),
-            ]
-        ),
+        include(service_index.urls),
     ),
     path(
         "o/<org-id:org_id>/p/<project-id:project_id>/s/<service-id:service_id>/e/<environment-id:environment_id>/",

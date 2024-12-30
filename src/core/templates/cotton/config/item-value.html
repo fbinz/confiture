@@ -8,7 +8,7 @@
 
   <button 
     type="button"
-    hx-get="{% url "core:service-value-edit" org_id project_id service_id item_id env_id %}"
+    hx-get="{% url "core:service-value-form" org_id project_id service_id item_id env_id %}"
     hx-target="#item-value-{{ item_id }}-{{ env_id }}"
     hx-swap="outerHTML"
     class="btn btn-square btn-xs"
